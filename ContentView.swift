@@ -321,8 +321,8 @@ struct TVDetailView: View {
                 }
                 .pickerStyle(.menu)
                 .padding(.bottom)
-                .onChange(of: selectedSeason) {
-                    viewModel.fetchEpisodes(for: show.id, season: selectedSeason)
+                .onChange(of: selectedSeason) { newSeason in
+                    viewModel.fetchEpisodes(for: show.id, season: newSeason)
                 }
 
                 ScrollView(.horizontal, showsIndicators: false) {
