@@ -1,0 +1,38 @@
+{
+  "images" : [
+    {
+      "filename" : "AJfQ9KTLmOH1MGPEiXj7R8_DbQlfw_T6VQoC-dBZpkixqxS-oWkkJRYHtEuMCmbQkO4CGQ2_tmSZikYYu-zjNJ2MruwWWy0ZBbRiGB8beoMBbVyn7Hmw35wxX5Lfs63BZxTVCn_ckhawaEgj9rVEjbONqH7GhizOSaYM8YHysIep6WpoPOTkhA=s1024 1.png",
+      "idiom" : "universal",
+      "platform" : "ios",
+      "size" : "1024x1024"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "filename" : "AJfQ9KTLmOH1MGPEiXj7R8_DbQlfw_T6VQoC-dBZpkixqxS-oWkkJRYHtEuMCmbQkO4CGQ2_tmSZikYYu-zjNJ2MruwWWy0ZBbRiGB8beoMBbVyn7Hmw35wxX5Lfs63BZxTVCn_ckhawaEgj9rVEjbONqH7GhizOSaYM8YHysIep6WpoPOTkhA=s1024 2.png",
+      "idiom" : "universal",
+      "platform" : "ios",
+      "size" : "1024x1024"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "tinted"
+        }
+      ],
+      "filename" : "AJfQ9KTLmOH1MGPEiXj7R8_DbQlfw_T6VQoC-dBZpkixqxS-oWkkJRYHtEuMCmbQkO4CGQ2_tmSZikYYu-zjNJ2MruwWWy0ZBbRiGB8beoMBbVyn7Hmw35wxX5Lfs63BZxTVCn_ckhawaEgj9rVEjbONqH7GhizOSaYM8YHysIep6WpoPOTkhA=s1024.png",
+      "idiom" : "universal",
+      "platform" : "ios",
+      "size" : "1024x1024"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
