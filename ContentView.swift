@@ -30,7 +30,7 @@ struct EmbedItem: Identifiable, Codable {
     let isTV: Bool
 
     var streamURL: String {
-        isTV ? "https://vidlink.pro/tv/\(id)/1/1??autoplay=true&nextbutton=true" : "https://vidlink.pro/movie/\(id)?autoplay=true&nextbutton=true"
+        isTV ? "https://vidlink.pro/tv/\(id)/1/1?autoplay=true&nextbutton=true" : "https://vidlink.pro/movie/\(id)?autoplay=true&nextbutton=true"
     }
 
     var fullPosterURL: String {
@@ -258,7 +258,7 @@ struct GridView: View {
     var body: some View {
         ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 150))]) {
-                ForEach(items.indices, id: \ .self) { index in
+                ForEach(items.indices, id: \.self) { index in
                     let item = items[index]
                     NavigationLink(destination: item.isTV ? AnyView(TVDetailView(show: item)) : AnyView(FullScreenVideoPlayerView(embedURL: item.streamURL))) {
                         VStack(alignment: .leading) {
@@ -315,7 +315,7 @@ struct TVDetailView: View {
                 Text(show.title).font(.title).bold().foregroundColor(.white)
 
                 Picker("Season", selection: $selectedSeason) {
-                    ForEach(1...viewModel.totalSeasons, id: \ .self) { season in
+                    ForEach(1...viewModel.totalSeasons, id: \.self) { season in
                         Text("Season \(season)").tag(season)
                     }
                 }
@@ -459,7 +459,7 @@ struct SearchView: View {
                         .padding(.horizontal)
                         .padding(.bottom, 5)
 
-                        ForEach(viewModel.searchHistory, id: \ .self) { historyQuery in
+                        ForEach(viewModel.searchHistory, id: \.self) { historyQuery in
                             Button(action: {
                                 query = historyQuery
                                 isSearching = true
