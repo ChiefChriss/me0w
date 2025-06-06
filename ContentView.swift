@@ -1,28 +1,10 @@
 import SwiftUI
 import WebKit
 import UIKit
-import Combine
+import Kingfisher
 
-// MARK: - API Service
-class APIService {
-    static let shared = APIService()
-    let apiKey = "e316c59b24ce81a8f56c325a3ffd2554"
+// MARK: - Models
 
-    func fetch<T: Decodable>(_ type: T.Type, from url: URL, completion: @escaping (Result<T, Error>) -> Void) {
-        URLSession.shared.dataTask(with: url) { data, _, error in
-            if let error = error {
-                completion(.failure(error))
-            } else if let data = data {
-                do {
-                    let decoded = try JSONDecoder().decode(T.self, from: data)
-                    completion(.success(decoded))
-                } catch {
-                    completion(.failure(error))
-                }
-            }
-        }.resume()
-    }
-}
 struct EmbedItem: Identifiable, Codable {
     let id: Int
     let title: String
@@ -38,22 +20,10 @@ struct EmbedItem: Identifiable, Codable {
     }
 }
 
-struct Episode: Identifiable, Codable {
+struct Episode: Identifiable {
     let id = UUID()
     let episodeNumber: Int
     let stillPath: String?
-}
-
-struct SearchResponse: Decodable {
-    let results: [EmbedRaw]
-}
-
-struct EmbedRaw: Decodable {
-    let id: Int
-    let poster_path: String?
-    let title: String?
-    let name: String?
-    let media_type: String?
 }
 
 struct CategoryCard: Identifiable {
@@ -62,20 +32,77 @@ struct CategoryCard: Identifiable {
     let gradient: LinearGradient
     let genreId: Int?
 
-    static let categories: [CategoryCard] = [
-        CategoryCard(title: "Action", gradient: LinearGradient(colors: [Color.orange, Color.red.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 28),
-        CategoryCard(title: "Comedy", gradient: LinearGradient(colors: [Color.green, Color.teal], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 35),
-        CategoryCard(title: "Drama", gradient: LinearGradient(colors: [Color.blue, Color.purple.opacity(0.7)], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 18),
-        CategoryCard(title: "Horror", gradient: LinearGradient(colors: [Color.purple, Color.black], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 27),
-        CategoryCard(title: "Romance", gradient: LinearGradient(colors: [Color.pink, Color.red.opacity(0.6)], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 10749),
-        CategoryCard(title: "Sci-Fi", gradient: LinearGradient(colors: [Color.cyan, Color.blue], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 878),
-        CategoryCard(title: "Thriller", gradient: LinearGradient(colors: [Color.red, Color.black], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 53),
-        CategoryCard(title: "Animation", gradient: LinearGradient(colors: [Color.yellow, Color.orange], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 16),
-        CategoryCard(title: "Documentary", gradient: LinearGradient(colors: [Color.gray, Color.blue.opacity(0.6)], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 99),
-        CategoryCard(title: "Family", gradient: LinearGradient(colors: [Color.green.opacity(0.7), Color.yellow.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 10751),
-        CategoryCard(title: "Fantasy", gradient: LinearGradient(colors: [Color.purple.opacity(0.8), Color.pink.opacity(0.6)], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 14),
-        CategoryCard(title: "Crime", gradient: LinearGradient(colors: [Color.black, Color.red.opacity(0.7)], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 80)
+    static let categories = [
+        CategoryCard(title: "Action", gradient: LinearGradient(colors: [.orange, .red.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 28),
+        CategoryCard(title: "Comedy", gradient: LinearGradient(colors: [.green, .teal], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 35),
+        CategoryCard(title: "Drama", gradient: LinearGradient(colors: [.blue, .purple.opacity(0.7)], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 18),
+        CategoryCard(title: "Horror", gradient: LinearGradient(colors: [.purple, .black], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 27),
+        CategoryCard(title: "Romance", gradient: LinearGradient(colors: [.pink, .red.opacity(0.6)], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 10749),
+        CategoryCard(title: "Sci-Fi", gradient: LinearGradient(colors: [.cyan, .blue], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 878),
+        CategoryCard(title: "Thriller", gradient: LinearGradient(colors: [.red, .black], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 53),
+        CategoryCard(title: "Animation", gradient: LinearGradient(colors: [.yellow, .orange], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 16),
+        CategoryCard(title: "Documentary", gradient: LinearGradient(colors: [.gray, .blue.opacity(0.6)], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 99),
+        CategoryCard(title: "Family", gradient: LinearGradient(colors: [.green.opacity(0.7), .yellow.opacity(0.8)], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 10751),
+        CategoryCard(title: "Fantasy", gradient: LinearGradient(colors: [.purple.opacity(0.8), .pink.opacity(0.6)], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 14),
+        CategoryCard(title: "Crime", gradient: LinearGradient(colors: [.black, .red.opacity(0.7)], startPoint: .topLeading, endPoint: .bottomTrailing), genreId: 80)
     ]
+}
+
+// MARK: - Helpers
+
+struct PosterCard: View {
+    let item: EmbedItem
+
+    var body: some View {
+        VStack(alignment: .leading) {
+            KFImage(URL(string: item.fullPosterURL))
+                .placeholder {
+                    Color.gray.frame(height: 200)
+                }
+                .resizable()
+                .scaledToFill()
+                .frame(height: 200)
+                .clipped()
+                .cornerRadius(10)
+
+            Text(item.title)
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(.white)
+                .lineLimit(1)
+        }
+    }
+}
+
+struct EpisodeCard: View {
+    let showID: Int
+    let selectedSeason: Int
+    let episode: Episode
+
+    var body: some View {
+        let url = "https://vidlink.pro/tv/\(showID)/\(selectedSeason)/\(episode.episodeNumber)?autoplay=true&nextbutton=true"
+
+        NavigationLink(destination: FullScreenVideoPlayerView(embedURL: url)) {
+            VStack {
+                if let path = episode.stillPath {
+                    KFImage(URL(string: "https://image.tmdb.org/t/p/w500\(path)"))
+                        .placeholder {
+                            Color.gray.frame(width: 120, height: 70)
+                        }
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 120, height: 70)
+                        .clipped()
+                        .cornerRadius(8)
+                } else {
+                    Color.gray.frame(width: 120, height: 70).cornerRadius(8)
+                }
+                Text("Ep \(episode.episodeNumber)")
+                    .font(.caption2)
+                    .foregroundColor(.white)
+            }
+        }
+    }
 }
 class ContentViewModel: ObservableObject {
     @Published var movies: [EmbedItem] = []
@@ -87,6 +114,7 @@ class ContentViewModel: ObservableObject {
     @Published var totalSeasons: Int = 1
     @Published var episodes: [Episode] = []
 
+    let apiKey = "e316c59b24ce81a8f56c325a3ffd2554"
     private var moviePage = 1
     private var showPage = 1
     private let maxHistoryItems = 10
@@ -97,33 +125,35 @@ class ContentViewModel: ObservableObject {
     }
 
     func fetchMovies() {
-        guard let url = URL(string: "https://api.themoviedb.org/3/movie/popular?api_key=\(APIService.shared.apiKey)&language=en-US&page=\(moviePage)") else { return }
-        APIService.shared.fetch(SearchResponse.self, from: url) { [weak self] result in
-            DispatchQueue.main.async {
-                if case .success(let response) = result {
-                    let items = self?.mapRaw(response.results, isTV: false) ?? []
-                    self?.movies += items
-                    if self?.moviePage == 1 && self?.home.isEmpty == true {
-                        self?.home += items.prefix(10)
+        guard let url = URL(string: "https://api.themoviedb.org/3/movie/popular?api_key=\(apiKey)&language=en-US&page=\(moviePage)") else { return }
+
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, error in
+            guard let self = self, let data = data, error == nil else { return }
+            self.parse(data: data, isTV: false) { items in
+                DispatchQueue.main.async {
+                    self.movies += items
+                    if self.moviePage == 1 && self.home.isEmpty {
+                        self.home += items.prefix(10)
                     }
                 }
             }
-        }
+        }.resume()
     }
 
     func fetchTVShows() {
-        guard let url = URL(string: "https://api.themoviedb.org/3/tv/popular?api_key=\(APIService.shared.apiKey)&language=en-US&page=\(showPage)") else { return }
-        APIService.shared.fetch(SearchResponse.self, from: url) { [weak self] result in
-            DispatchQueue.main.async {
-                if case .success(let response) = result {
-                    let items = self?.mapRaw(response.results, isTV: true) ?? []
-                    self?.shows += items
-                    if self?.showPage == 1 && self?.home.isEmpty == true {
-                        self?.home += items.prefix(10)
+        guard let url = URL(string: "https://api.themoviedb.org/3/tv/popular?api_key=\(apiKey)&language=en-US&page=\(showPage)") else { return }
+
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+            guard let self = self, let data = data else { return }
+            self.parse(data: data, isTV: true) { items in
+                DispatchQueue.main.async {
+                    self.shows += items
+                    if self.showPage == 1 && self.home.isEmpty {
+                        self.home += items.prefix(10)
                     }
                 }
             }
-        }
+        }.resume()
     }
 
     func loadMoreMovies() {
@@ -136,42 +166,82 @@ class ContentViewModel: ObservableObject {
         fetchTVShows()
     }
 
+    func fetchSeasonCount(showId: Int) {
+        guard let url = URL(string: "https://api.themoviedb.org/3/tv/\(showId)?api_key=\(apiKey)&language=en-US") else { return }
+
+        URLSession.shared.dataTask(with: url) { data, _, _ in
+            if let data = data,
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let count = json["number_of_seasons"] as? Int {
+                DispatchQueue.main.async {
+                    self.totalSeasons = count
+                }
+            }
+        }.resume()
+    }
+
+    func fetchEpisodes(for showId: Int, season: Int) {
+        guard let url = URL(string: "https://api.themoviedb.org/3/tv/\(showId)/season/\(season)?api_key=\(apiKey)&language=en-US") else { return }
+
+        URLSession.shared.dataTask(with: url) { data, _, _ in
+            if let data = data,
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let epArr = json["episodes"] as? [[String: Any]] {
+                let eps = epArr.compactMap { dict -> Episode? in
+                    guard let epNum = dict["episode_number"] as? Int else { return nil }
+                    return Episode(episodeNumber: epNum, stillPath: dict["still_path"] as? String)
+                }
+                DispatchQueue.main.async {
+                    self.episodes = eps
+                }
+            }
+        }.resume()
+    }
+
     func search(query: String) {
         let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        guard let url = URL(string: "https://api.themoviedb.org/3/search/multi?api_key=\(APIService.shared.apiKey)&language=en-US&query=\(encoded)") else { return }
+        guard let url = URL(string: "https://api.themoviedb.org/3/search/multi?api_key=\(apiKey)&language=en-US&query=\(encoded)") else { return }
 
         addSearchQuery(query)
 
-        APIService.shared.fetch(SearchResponse.self, from: url) { [weak self] result in
-            DispatchQueue.main.async {
-                if case .success(let response) = result {
-                    self?.searchResults = self?.mapRaw(response.results, isTV: nil) ?? []
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+            guard let self = self, let data = data else { return }
+            self.parse(data: data, isTV: nil) { items in
+                DispatchQueue.main.async {
+                    self.searchResults = items
                 }
             }
-        }
+        }.resume()
     }
 
     func fetchByGenre(genreId: Int) {
-        guard let url = URL(string: "https://api.themoviedb.org/3/discover/movie?api_key=\(APIService.shared.apiKey)&language=en-US&with_genres=\(genreId)") else { return }
-        APIService.shared.fetch(SearchResponse.self, from: url) { [weak self] result in
-            DispatchQueue.main.async {
-                if case .success(let response) = result {
-                    self?.categoryResults = self?.mapRaw(response.results, isTV: false) ?? []
+        guard let url = URL(string: "https://api.themoviedb.org/3/discover/movie?api_key=\(apiKey)&language=en-US&with_genres=\(genreId)") else { return }
+
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+            guard let self = self, let data = data else { return }
+            self.parse(data: data, isTV: false) { items in
+                DispatchQueue.main.async {
+                    self.categoryResults = items
                 }
             }
+        }.resume()
+    }
+
+    private func parse(data: Data, isTV: Bool?, completion: @escaping ([EmbedItem]) -> Void) {
+        if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+           let results = json["results"] as? [[String: Any]] {
+            let items = results.compactMap { dict -> EmbedItem? in
+                guard let id = dict["id"] as? Int,
+                      let posterPath = dict["poster_path"] as? String else { return nil }
+
+                let title = dict["title"] as? String ?? dict["name"] as? String ?? ""
+                let isTVResult = dict["media_type"] as? String == "tv" || isTV == true
+                return EmbedItem(id: id, title: title, posterPath: posterPath, isTV: isTVResult)
+            }
+            completion(items)
         }
     }
 
-    private func mapRaw(_ raw: [EmbedRaw], isTV: Bool?) -> [EmbedItem] {
-        raw.compactMap { item in
-            guard let poster = item.poster_path else { return nil }
-            let title = item.title ?? item.name ?? ""
-            let tv = item.media_type == "tv" || isTV == true
-            return EmbedItem(id: item.id, title: title, posterPath: poster, isTV: tv)
-        }
-    }
-
-    // Search history management
     func addSearchQuery(_ query: String) {
         var currentHistory = searchHistory.filter { $0.lowercased() != query.lowercased() }
         currentHistory.insert(query, at: 0)
@@ -197,11 +267,6 @@ class ContentViewModel: ObservableObject {
         saveSearchHistory()
     }
 }
-// NetflixAppOptimized.swift - Full SwiftUI App with Views
-
-// [Cut for brevity: APIService, models, and ContentViewModel from previous section remain unchanged above.]
-
-// MARK: - FullScreen Video Player
 struct FullScreenVideoPlayerView: UIViewControllerRepresentable {
     let embedURL: String
 
@@ -224,6 +289,7 @@ struct FullScreenVideoPlayerView: UIViewControllerRepresentable {
         if let url = URL(string: embedURL) {
             webView.load(URLRequest(url: url))
         }
+
         return viewController
     }
 
@@ -241,6 +307,11 @@ struct FullScreenVideoPlayerView: UIViewControllerRepresentable {
                         v.muted = false;
                         v.play().catch(e => console.log('Autoplay fail:', e));
                         clearInterval(interval);
+                    } else {
+                        attempts++;
+                        if (attempts >= maxAttempts) {
+                            clearInterval(interval);
+                        }
                     }
                 }, 500);
             }, 2000);
@@ -249,54 +320,6 @@ struct FullScreenVideoPlayerView: UIViewControllerRepresentable {
         }
     }
 }
-
-// MARK: - GridView
-struct GridView: View {
-    @Binding var items: [EmbedItem]
-    let loadMore: () -> Void
-
-    var body: some View {
-        ScrollView {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 150))]) {
-                ForEach(items.indices, id: \.self) { index in
-                    let item = items[index]
-                    NavigationLink(destination: item.isTV ? AnyView(TVDetailView(show: item)) : AnyView(FullScreenVideoPlayerView(embedURL: item.streamURL))) {
-                        VStack(alignment: .leading) {
-                            AsyncImage(url: URL(string: item.fullPosterURL)) { phase in
-                                switch phase {
-                                case .empty:
-                                    Color.gray.frame(height: 200)
-                                case .success(let image):
-                                    image.resizable().scaledToFill().frame(height: 200).clipped()
-                                case .failure:
-                                    Color.red.frame(height: 200)
-                                @unknown default:
-                                    Color.black.frame(height: 200)
-                                }
-                            }
-                            .cornerRadius(10)
-
-                            Text(item.title)
-                                .font(.caption)
-                                .fontWeight(.medium)
-                                .foregroundColor(.white)
-                                .lineLimit(1)
-                        }
-                        .onAppear {
-                            if index == items.count - 1 {
-                                loadMore()
-                            }
-                        }
-                    }
-                }
-            }
-            .padding()
-        }
-        .background(Color.black)
-    }
-}
-
-// MARK: - TVDetailView
 struct TVDetailView: View {
     let show: EmbedItem
     @State private var selectedSeason = 1
@@ -305,14 +328,18 @@ struct TVDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                AsyncImage(url: URL(string: show.fullPosterURL)) { phase in
-                    if case let .success(image) = phase {
-                        image.resizable().aspectRatio(contentMode: .fit).cornerRadius(12)
-                    } else {
+                KFImage(URL(string: show.fullPosterURL))
+                    .placeholder {
                         Color.gray.frame(height: 300)
                     }
-                }
-                Text(show.title).font(.title).bold().foregroundColor(.white)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .cornerRadius(12)
+
+                Text(show.title)
+                    .font(.title)
+                    .bold()
+                    .foregroundColor(.white)
 
                 Picker("Season", selection: $selectedSeason) {
                     ForEach(1...viewModel.totalSeasons, id: \.self) { season in
@@ -320,32 +347,14 @@ struct TVDetailView: View {
                     }
                 }
                 .pickerStyle(.menu)
-                .padding(.bottom)
-                .onChange(of: selectedSeason) { newSeason in
-                    viewModel.fetchEpisodes(for: show.id, season: newSeason)
+                .onChange(of: selectedSeason) {
+                    viewModel.fetchEpisodes(for: show.id, season: selectedSeason)
                 }
 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
                         ForEach(viewModel.episodes) { ep in
-                            let url = "https://vidlink.pro/tv/\(show.id)/\(selectedSeason)/\(ep.episodeNumber)?autoplay=true&nextbutton=true"
-                            NavigationLink(destination: FullScreenVideoPlayerView(embedURL: url)) {
-                                VStack {
-                                    if let path = ep.stillPath {
-                                        AsyncImage(url: URL(string: "https://image.tmdb.org/t/p/w500\(path)")) { img in
-                                            img.resizable().aspectRatio(contentMode: .fill)
-                                                .frame(width: 120, height: 70)
-                                                .clipped()
-                                                .cornerRadius(8)
-                                        } placeholder: {
-                                            Color.gray.frame(width: 120, height: 70)
-                                        }
-                                    } else {
-                                        Color.gray.frame(width: 120, height: 70).cornerRadius(8)
-                                    }
-                                    Text("Ep \(ep.episodeNumber)").font(.caption2).foregroundColor(.white)
-                                }
-                            }
+                            EpisodeCard(showID: show.id, selectedSeason: selectedSeason, episode: ep)
                         }
                     }
                 }
@@ -361,32 +370,49 @@ struct TVDetailView: View {
         }
     }
 }
+struct GridView: View {
+    @Binding var items: [EmbedItem]
+    let loadMore: () -> Void
 
-// MARK: - Continue with SearchView and ContentView next on request
-// NetflixAppOptimized.swift - Full SwiftUI App with Views
+    var body: some View {
+        ScrollView {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 150))]) {
+                ForEach(items.indices, id: \.self) { index in
+                    let item = items[index]
+                    NavigationLink(destination: item.isTV ?
+                        AnyView(TVDetailView(show: item)) :
+                        AnyView(FullScreenVideoPlayerView(embedURL: item.streamURL))) {
 
-// [Cut for brevity: APIService, models, ContentViewModel, FullScreenVideoPlayerView, GridView, TVDetailView remain above.]
-
-// MARK: - CategoryGridView
+                        PosterCard(item: item)
+                    }
+                    .onAppear {
+                        if index == items.count - 1 {
+                            loadMore()
+                        }
+                    }
+                }
+            }
+            .padding([.horizontal, .bottom])
+        }
+        .background(Color.black)
+        .ignoresSafeArea(edges: .top)
+    }
+}
 struct CategoryGridView: View {
     @ObservedObject var viewModel: ContentViewModel
     let category: CategoryCard
 
     var body: some View {
-        GridView(items: $viewModel.categoryResults) {
-            // Optional load more logic here
-        }
-        .navigationTitle(category.title)
-        .navigationBarTitleDisplayMode(.large)
-        .onAppear {
-            if let genreId = category.genreId {
-                viewModel.fetchByGenre(genreId: genreId)
+        GridView(items: $viewModel.categoryResults) {}
+            .navigationTitle(category.title)
+            .navigationBarTitleDisplayMode(.large)
+            .onAppear {
+                if let genreId = category.genreId {
+                    viewModel.fetchByGenre(genreId: genreId)
+                }
             }
-        }
     }
 }
-
-// MARK: - SearchView
 struct SearchView: View {
     @ObservedObject var viewModel: ContentViewModel
     @State private var query = ""
@@ -396,9 +422,13 @@ struct SearchView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
+                // Search Bar
                 HStack {
                     HStack {
-                        Image(systemName: "magnifyingglass").foregroundColor(.gray).padding(.leading, 12)
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.gray)
+                            .padding(.leading, 12)
+
                         TextField("Shows, Movies, and More", text: $query)
                             .foregroundColor(.white)
                             .font(.title3)
@@ -411,6 +441,7 @@ struct SearchView: View {
                                     searchBarIsFocused = false
                                 }
                             }
+
                         if !query.isEmpty {
                             Button(action: {
                                 query = ""
@@ -418,43 +449,42 @@ struct SearchView: View {
                                 viewModel.searchResults = []
                                 searchBarIsFocused = true
                             }) {
-                                Image(systemName: "xmark.circle.fill").foregroundColor(.gray).padding(.trailing, 12)
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.gray)
+                                    .padding(.trailing, 12)
                             }
                         }
                     }
-                    .background(Color(.systemGray6)).cornerRadius(12)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 20)
 
+                // Conditional Content
                 if isSearching && !viewModel.searchResults.isEmpty {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 150))], spacing: 16) {
                         ForEach(viewModel.searchResults) { item in
-                            NavigationLink(destination: item.isTV ? AnyView(TVDetailView(show: item)) : AnyView(FullScreenVideoPlayerView(embedURL: item.streamURL))) {
-                                VStack(alignment: .leading) {
-                                    AsyncImage(url: URL(string: item.fullPosterURL)) { phase in
-                                        switch phase {
-                                        case .empty: Color.gray.frame(height: 200)
-                                        case .success(let image): image.resizable().scaledToFill().frame(height: 200).clipped()
-                                        case .failure: Color.red.frame(height: 200)
-                                        @unknown default: Color.black.frame(height: 200)
-                                        }
-                                    }.cornerRadius(10)
-                                    Text(item.title).font(.caption).fontWeight(.medium).foregroundColor(.white).lineLimit(1)
-                                }
+                            NavigationLink(destination: item.isTV ?
+                                AnyView(TVDetailView(show: item)) :
+                                AnyView(FullScreenVideoPlayerView(embedURL: item.streamURL))) {
+                                PosterCard(item: item)
                             }
                         }
                     }
                     .padding(.horizontal)
-
                 } else if searchBarIsFocused && !viewModel.searchHistory.isEmpty {
                     VStack(alignment: .leading) {
                         HStack {
-                            Text("Recent Searches").font(.headline).foregroundColor(.white)
+                            Text("Recent Searches")
+                                .font(.headline)
+                                .foregroundColor(.white)
                             Spacer()
                             Button("Clear History") {
                                 viewModel.clearSearchHistory()
-                            }.font(.caption).foregroundColor(.red)
+                            }
+                            .font(.caption)
+                            .foregroundColor(.red)
                         }
                         .padding(.horizontal)
                         .padding(.bottom, 5)
@@ -467,10 +497,13 @@ struct SearchView: View {
                                 searchBarIsFocused = false
                             }) {
                                 HStack {
-                                    Image(systemName: "clock.fill").foregroundColor(.gray)
-                                    Text(historyQuery).foregroundColor(.white)
+                                    Image(systemName: "clock.fill")
+                                        .foregroundColor(.gray)
+                                    Text(historyQuery)
+                                        .foregroundColor(.white)
                                     Spacer()
-                                    Image(systemName: "arrow.up.left").foregroundColor(.gray)
+                                    Image(systemName: "arrow.up.left")
+                                        .foregroundColor(.gray)
                                 }
                                 .padding(.vertical, 8)
                                 .padding(.horizontal)
@@ -481,14 +514,18 @@ struct SearchView: View {
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 20)
-
                 } else if !isSearching {
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                         ForEach(CategoryCard.categories) { category in
                             NavigationLink(destination: CategoryGridView(viewModel: viewModel, category: category)) {
                                 ZStack {
-                                    RoundedRectangle(cornerRadius: 12).fill(category.gradient).frame(height: 100)
-                                    Text(category.title).font(.title2).fontWeight(.semibold).foregroundColor(.white)
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(category.gradient)
+                                        .frame(height: 100)
+                                    Text(category.title)
+                                        .font(.title2)
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.white)
                                         .shadow(color: .black.opacity(0.3), radius: 2, x: 1, y: 1)
                                 }
                             }
@@ -506,26 +543,30 @@ struct SearchView: View {
         }
     }
 }
-
-// MARK: - ContentView
 struct ContentView: View {
     @StateObject private var viewModel = ContentViewModel()
 
     var body: some View {
         TabView {
+            // Home Tab
             NavigationView {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text("Home").font(.largeTitle).bold().foregroundColor(.white)
+                        Text("Home")
+                            .font(.largeTitle)
+                            .bold()
+                            .foregroundColor(.white)
                         Spacer()
-                        Image(systemName: "film") // Replace with your app logo if needed
+                        Image("AppLogo") // Make sure this asset exists in your Assets.xcassets
                             .resizable()
                             .frame(width: 32, height: 32)
                             .clipShape(RoundedRectangle(cornerRadius: 6))
                     }
                     .padding([.horizontal, .top])
 
-                    GridView(items: $viewModel.home) {}
+                    GridView(items: $viewModel.home) {
+                        // Home is preloaded, no loadMore needed
+                    }
                 }
                 .background(Color.black.ignoresSafeArea())
             }
@@ -533,6 +574,7 @@ struct ContentView: View {
                 Label("Home", systemImage: "house")
             }
 
+            // Search Tab
             NavigationView {
                 SearchView(viewModel: viewModel)
             }
@@ -540,6 +582,7 @@ struct ContentView: View {
                 Label("Search", systemImage: "magnifyingglass")
             }
 
+            // Movies Tab
             NavigationView {
                 GridView(items: $viewModel.movies) {
                     viewModel.loadMoreMovies()
@@ -551,6 +594,7 @@ struct ContentView: View {
                 Label("Movies", systemImage: "film")
             }
 
+            // TV Shows Tab
             NavigationView {
                 GridView(items: $viewModel.shows) {
                     viewModel.loadMoreTVShows()
@@ -568,9 +612,3 @@ struct ContentView: View {
         }
     }
 }
-
-// MARK: - Preview
-#Preview {
-    ContentView().preferredColorScheme(.dark)
-}
-
