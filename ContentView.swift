@@ -30,7 +30,7 @@ struct EmbedItem: Identifiable, Codable {
     let isTV: Bool
 
     var streamURL: String {
-        isTV ? "https://vidlink.pro/tv/\(id)/1/1??autoplay=true&nextbutton=true" : "https://vidlink.pro/movie/\(id)?autoplay=true&nextbutton=true"
+        isTV ? "https://vidlink.pro/tv/\(id)/1/1?autoplay=true&nextbutton=true" : "https://vidlink.pro/movie/\(id)?autoplay=true&nextbutton=true"
     }
 
     var fullPosterURL: String {
