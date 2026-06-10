@@ -244,7 +244,7 @@ class ContentViewModel: ObservableObject {
     @Published var continueWatching: [EmbedItem] = []
     @Published var myList: [EmbedItem] = []
     
-    let apiKey = "e316c59b24ce81a8f56c325a3ffd2554"
+    let apiKey = Secrets.tmdbApiKey
     @Published var moviePage = 1
     @Published var showPage = 1
     private let maxHistoryItems = 10

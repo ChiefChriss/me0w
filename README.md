@@ -37,9 +37,10 @@ cd me0w
 
 2. Get a TMDB API key at [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api)
 
-3. Add your API key in `ContentView.swift` (replace the placeholder):
-```swift
-let apiKey = "YOUR_TMDB_API_KEY"
+3. Copy the example secrets file and add your key:
+```bash
+cp Secrets.example.plist Secrets.plist
+# Then edit Secrets.plist and replace YOUR_TMDB_API_KEY with your actual key
 ```
 
 4. Install Kingfisher via Swift Package Manager or CocoaPods
